@@ -27,10 +27,10 @@
     const button = document.createElement('button');
     button.textContent = '转换 SVG 为 PNG';
     button.style.position = 'fixed';
-    button.style.top = '10px';
+    button.style.top = '70px';
     button.style.right = '10px';
-    button.style.width = '150px';  // 固定宽度
-    button.style.height = '50px';   // 固定高度
+    button.style.width = '150px';
+    button.style.height = '50px';
     button.style.padding = '10px';
     button.style.backgroundColor = '#007bff';
     button.style.color = 'white';
@@ -76,6 +76,11 @@
             return;
         }
         try {
+            var selectConfirm = confirm("是否修改为指定名字");
+            var userInput = "";
+            if(selectConfirm == true){
+                userInput = prompt("请输入所需要的内容:", "");
+            }
             const divElement = document.querySelector('.water_perview');
 
             if (!divElement) {
@@ -100,7 +105,7 @@
             textElements.forEach(textElement => {
                 if (textElement.textContent.includes('ProcessOn.com免费流程图')) {
                     // 删除文字内容
-                    textElement.textContent = '';
+                    textElement.textContent = userInput;
                 }
             });
             // 获取修改后的 SVG 字符串
