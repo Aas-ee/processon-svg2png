@@ -5,10 +5,11 @@
 ## 功能
 - 支持按钮拖拽
 - 支持将流程图svg 转成 png下载
+- 支持修改自定义文字
 - 下载svg（开发中）
 
 ## 使用方法
-在Tampermonkey中搜索 **SVG2PNG** 下载
+在Tampermonkey的greasyfork中搜索 **Processon-SVG2PNG辅助器** 下载
 
 ## ⚠️注意
 本项目仅供个人技术学习交流
