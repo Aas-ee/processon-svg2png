@@ -12,7 +12,7 @@
 
 安装并使用这款插件，需要你的浏览器装有油猴[Tampermonkey](https://tampermonkey.net/)插件。
 
-| [GitHub版](https://greasyfork.org/zh-CN/scripts/503160-processon-svg2png%E8%BE%85%E5%8A%A9%E5%99%A8)| 
+| [GitHub地址](https://github.com/Aas-ee/processon-svg2png)| 
 | :----------------------------------------------------------: |
 |         在Github上正式发布的版本, 最稳定         |  
 
