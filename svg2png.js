@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SVG2PNG
 // @namespace    https://www.processon.com/
-// @version      0.1
+// @version      0.2
 // @description  svg转png
 // @author       Aasee
 // @match        https://www.processon.com/diagraming/*
@@ -88,7 +88,7 @@
                 return;
             }
 
-            const svgContent = divElement.querySelector('svg').outerHTML;
+            const svgContent = divElement.querySelector('svg').outerHTML.replace(/&nbsp;/g, '&#160;');
             // 创建 Canvas
             const parser = new DOMParser();
             const svgDoc = parser.parseFromString(svgContent, 'image/svg+xml');
