@@ -28,7 +28,7 @@ body:
     attributes:
       label: 相关代码
       description: 发生报错的相关代码（请注意隐藏隐私信息）
-      render: python
+      render: js
     validations:
       required: false
 
@@ -38,24 +38,6 @@ body:
       label: 堆栈跟踪
       description: 请将产生的堆栈跟踪信息粘贴到此处，便于开发者定位 Bug。
       render: shell
-
-  - type: input
-    id: python_version
-    attributes:
-      label: Python 版本
-      description: 您当前使用的 Python 版本号
-      placeholder: 如：0.3.0
-    validations:
-      required: true
-
-  - type: input
-    id: library_version
-    attributes:
-      label: 模块版本
-      description: 您当前使用的模块版本号
-      placeholder: 如：0.3.0
-    validations:
-      required: true
 
   - type: dropdown
     id: runtime_environment
