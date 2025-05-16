@@ -1,0 +1,34 @@
+name: Submit a request/feature
+description: Use this template to request a new feature or submit a requirement
+title: "[Feature]:"
+labels: ["feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for submitting a feature request. Please provide a clear and descriptive title for your request to help developers better understand and implement it.
+
+  - type: textarea
+    id: describe
+    attributes:
+      label: Feature Description
+      description: Describe the requested feature
+    validations:
+      required: true
+
+  - type: textarea
+    id: expect
+    attributes:
+      label: Expected Result
+      description: The desired functionality or outcome
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: revision
+    attributes:
+      label: Final step
+      description: Review your answers
+      options:
+        - label: I believe the above description is detailed enough to allow developers to implement the feature. If my issue does not meet these requirements, it may be **closed without further notice**.
+          required: true

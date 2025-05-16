@@ -1,0 +1,61 @@
+name: Bug Report
+description: Encountered a bug during use
+title: "[BUG]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for submitting a bug report. Please provide a clear and descriptive title to help developers resolve your issue.
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Bug Information
+
+        Describe the bug you encountered. You may attach screenshots, relevant code, stack traces, or other materials to help developers track the issue.
+
+  - type: textarea
+    id: about_info
+    attributes:
+      label: Related Information
+      description: Error message or details
+    validations:
+      required: true
+
+  - type: textarea
+    id: about_code
+    attributes:
+      label: Related Code
+      description: Code related to the error (please hide any private information)
+      render: js
+    validations:
+      required: false
+
+  - type: textarea
+    id: stacktrace
+    attributes:
+      label: Stack Trace
+      description: Please paste the generated stack trace here to help developers locate the bug.
+      render: shell
+
+  - type: dropdown
+    id: runtime_environment
+    attributes:
+      label: Runtime Environment
+      description: The environment where the program runs
+      options:
+        - Windows
+        - MacOS
+        - Linux
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: revision
+    attributes:
+      label: Final Step
+      description: Review your answers
+      options:
+        - label: I believe the above description is detailed enough to allow developers to reproduce the issue. If my issue does not meet these requirements, it may be **closed without further notice**.
+          required: true
