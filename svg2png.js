@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SVG2PNG
 // @namespace    https://www.processon.com/
-// @version      0.2
+// @version      0.3
 // @description  svg转png
 // @author       Aasee
 // @match        https://www.processon.com/diagraming/*
