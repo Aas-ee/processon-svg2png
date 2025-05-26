@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         SVG2PNG
+// @name         Processon-SVG2PNG辅助器
 // @namespace    https://www.processon.com/
 // @version      0.3.2
 // @description  svg转png
