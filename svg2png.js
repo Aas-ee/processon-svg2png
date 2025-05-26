@@ -264,7 +264,7 @@
                 return;
             }
 
-            const svgContent = divElement.querySelector('svg').outerHTML;
+            const svgContent = divElement.querySelector('svg').outerHTML.outerHTML.replace(/&nbsp;/g, '&#160;');
             const modifiedSvgString = modifyWatermark(svgContent, userInput);
             const blob = new Blob([modifiedSvgString], { type: 'image/svg+xml' });
             const url = URL.createObjectURL(blob);
