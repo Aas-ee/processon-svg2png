@@ -1,0 +1,33 @@
+name: Update ModelScope Badge
+
+on:
+  schedule:
+    - cron: '0 */3 * * *'  # 每天每隔3小时执行一次（UTC 时间）
+  workflow_dispatch:        # 可手动触发
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get CallVolume from ModelScope
+        id: fetch
+        run: |
+          result=$(curl -s -H 'x-modelscope-accept-language: zh_CN' \
+            https://www.modelscope.cn/api/v1/mcpServers/Aasee1/open-webSearch)
+
+          value=$(echo "$result" | jq -r '.Data.CallVolume')
+          echo "value=▲ $value" >> $GITHUB_OUTPUT
+
+      - name: Update Gist
+        env:
+          GIST_ID: ${{ secrets.GIST_ID }}
+          GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
+        run: |
+          json=$(jq -n --arg v "${{ steps.fetch.outputs.value }}" \
+            '{schemaVersion:1,label:"ModelScope",message:$v,color:"orange"}')
+
+          curl -X PATCH "https://api.github.com/gists/${GIST_ID}" \
+            -H "Authorization: token $GIST_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"files\": {\"badge.json\": {\"content\": $json}}}"
