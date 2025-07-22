@@ -30,4 +30,4 @@ jobs:
           curl -X PATCH "https://api.github.com/gists/${GIST_ID}" \
             -H "Authorization: token $GIST_TOKEN" \
             -H "Content-Type: application/json" \
-            -d "{\"files\": {\"badge.json\": {\"content\": $json}}}"
+            -d "{\"files\": {\"badge.json\": {\"content\": $(jq -Rs . <<< \"$json\")}}}"
