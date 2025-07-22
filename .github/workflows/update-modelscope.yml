@@ -27,7 +27,10 @@ jobs:
           json=$(jq -n --arg v "${{ steps.fetch.outputs.value }}" \
             '{schemaVersion:1,label:"ModelScope",message:$v,color:"orange"}')
 
+          jq -n --arg content "$json" \
+            '{files: {"badge.json": {content: $content}}}' > payload.json
+
           curl -X PATCH "https://api.github.com/gists/${GIST_ID}" \
             -H "Authorization: token $GIST_TOKEN" \
             -H "Content-Type: application/json" \
-            -d "$(jq -n --argjson content "$json" '{files: {"badge.json": {content: $content}}}')"
+            --data @payload.json
