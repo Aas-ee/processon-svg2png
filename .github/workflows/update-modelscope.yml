@@ -16,8 +16,11 @@ jobs:
           result=$(curl -s -H 'x-modelscope-accept-language: zh_CN' \
             https://www.modelscope.cn/api/v1/mcpServers/Aasee1/open-webSearch)
 
-          value=$(echo "$result" | jq -r '.Data.CallVolume')
-          echo "value=▲ $value" >> $GITHUB_OUTPUT
+          raw_value=$(echo "$result" | jq -r '.Data.CallVolume')
+
+          formatted_value=$(echo "$raw_value" | awk '{printf "%.1fk", $1/1000}')
+
+          echo "value=▲ $formatted_value" >> $GITHUB_OUTPUT
 
       - name: Update Gist
         env:
