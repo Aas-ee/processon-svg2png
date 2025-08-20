@@ -43,7 +43,7 @@ jobs:
               const page = await context.newPage();
 
               console.log('Navigating to Bing...');
-              await page.goto('https://www.bing.com/', { waitUntil: 'networkidle' });
+              await page.goto('https://cn.bing.com/search?q=Windows', { waitUntil: 'networkidle' });
 
               // Wait for cookies to be set
               await page.waitForTimeout(3000);
