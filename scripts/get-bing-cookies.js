@@ -66,3 +66,9 @@ async function getAndSaveBingCookie() {
         await browser.close();
     }
 }
+
+// 执行函数
+getAndSaveBingCookie().catch(error => {
+    console.error('❌ Error executing the script:', error);
+    process.exit(1);
+});
