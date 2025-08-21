@@ -29,7 +29,7 @@ jobs:
 
       - name: Update GitHub Gist using gh CLI
         env:
-          GIST_PAT: ${{ secrets.GIST_TOKEN }}
+          GH_TOKEN: ${{ secrets.GIST_TOKEN }}
           GIST_ID: ${{ secrets.BING_GIST_ID }}
         run: |
           # 使用 gh cli 更新 Gist
