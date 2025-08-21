@@ -26,17 +26,6 @@ async function getAndSaveBingCookie() {
         const title = await page.title();
         console.log(`页面标题: ${title}`);
 
-        if (!title || !title.includes('Bing')) {
-            throw new Error(`无法正确加载 ${bingUrl}，页面标题: ${title}`);
-        }
-
-        console.log(`✅ 成功访问 ${bingUrl}`);
-        const currentUrl = bingUrl;
-
-        if (!success) {
-            throw new Error('无法访问任何 Bing 网址');
-        }
-
         // 关键步骤: 处理 Cookie 同意弹窗
         const acceptButtonSelectors = [
             '#bnp_btn_accept',
