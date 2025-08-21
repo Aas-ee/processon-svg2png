@@ -92,22 +92,40 @@ async function getAndSaveBingCookie() {
 
         // 获取最终 Cookie
         cookies = await context.cookies();
-        const cookieString = cookies.map(c => `${c.name}=${c.value}`).join('; ');
+        console.log(`🍪 总共获取到 ${cookies.length} 个 cookies`);
 
-        if (!cookieString || cookies.length < 3) {
-            throw new Error(`未能获取足够的 cookies。数量: ${cookies.length}`);
+        // 只保留指定的重要Cookie
+        const importantCookieNames = [
+            'MUID', 'MUIDB', '_EDGE_S', '_EDGE_V', 'SRCHD', 'SRCHUID', '_Rwho',
+            '_SS', '_C_ETH', '_RwBf', 'SRCHUSR', 'SRCHHPGUSR'
+        ];
+
+        const importantCookies = cookies.filter(c => importantCookieNames.includes(c.name));
+        console.log(`🔑 筛选出 ${importantCookies.length} 个重要 cookies`);
+        console.log('重要Cookie名称:', importantCookies.map(c => c.name).join(', '));
+
+        // 缺失的重要Cookie
+        const missingCookies = importantCookieNames.filter(
+            name => !importantCookies.some(c => c.name === name)
+        );
+        if (missingCookies.length > 0) {
+            console.log(`⚠️ 缺少的重要Cookie: ${missingCookies.join(', ')}`);
         }
 
-        console.log(`🍪 成功获取 ${cookies.length} 个 cookies`);
-        console.log('Cookie 名称:', cookies.map(c => c.name).join(', '));
+        const cookieString = importantCookies.map(c => `${c.name}=${c.value}`).join('; ');
+
+        if (!cookieString || importantCookies.length < 2) {
+            throw new Error(`未能获取足够的重要cookies。数量: ${importantCookies.length}`);
+        }
 
         // 准备要存入 Gist 的最终 JSON 内容
         const output = {
             cookie: cookieString,
             timestamp: new Date().toISOString(),
-            cookieCount: cookies.length,
-            hasMuid: cookies.some(c => c.name === 'MUID'),
-            source: searchUrl
+            cookieCount: importantCookies.length,
+            hasMuid: importantCookies.some(c => c.name === 'MUID'),
+            source: searchUrl,
+            cookies: importantCookies.map(c => ({ name: c.name, value: c.value }))
         };
 
         // 写入文件，供下一步使用

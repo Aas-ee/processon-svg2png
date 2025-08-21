@@ -27,15 +27,6 @@ jobs:
       - name: Run Playwright script to fetch cookie
         run: node scripts/get-bing-cookies.js
 
-      - name: Install GitHub CLI
-        run: |
-          type -p curl >/dev/null || apt-get install curl -y
-          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
-          && chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
-          && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
-          && apt update \
-          && apt install gh -y
-
       - name: Verify cookie file exists
         run: |
           if [ ! -f "bing_cookies.json" ]; then
@@ -45,12 +36,24 @@ jobs:
           echo "📄 Cookie file found. Contents:"
           cat bing_cookies.json
 
-      - name: Update GitHub Gist using gh CLI
+      - name: Update GitHub Gist using curl
         env:
-          GH_TOKEN: ${{ secrets.GIST_TOKEN }}
+          GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
           GIST_ID: ${{ secrets.BING_GIST_ID }}
         run: |
-          # 使用 gh cli 更新 Gist
-          gh gist edit "${{ secrets.BING_GIST_ID }}" bing_cookies.json
+          echo "正在更新 GitHub Gist..."
 
-          echo "✅ Gist update complete!"
+          # 安装 jq 工具(如果未安装)
+          sudo apt-get update && sudo apt-get install -y jq
+
+          # 准备 Gist 内容 (转义JSON)
+          CONTENT=$(cat bing_cookies.json | jq -c . | jq -sR .)
+
+          # 使用 curl 更新 Gist
+          curl -s -X PATCH \
+            -H "Authorization: token $GIST_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"files\": {\"bing_cookies.json\": {\"content\": $CONTENT}}}" \
+            "https://api.github.com/gists/$GIST_ID"
+
+          echo "✅ Gist 更新完成!"
