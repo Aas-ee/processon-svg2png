@@ -1,296 +1,41 @@
-name: Update Bing Cookies
+name: Update Bing Cookie Gist
 
 on:
-#  schedule:
-#    # Run daily at 2 AM UTC
-#    - cron: '0 2 * * *'
-  workflow_dispatch: # Allow manual triggering
+  schedule:
+    # 每天凌晨 2 点 (UTC) 运行一次
+    - cron: '0 2 * * *'
+  workflow_dispatch: # 允许手动触发
 
 jobs:
-  update-cookies:
+  update-cookie:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
+      - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
-      - name: Install Playwright
+      - name: Install dependencies and browsers
         run: |
-          npm install playwright@latest
-          npx playwright install chromium
+          npm install playwright
+          npx playwright install --with-deps chromium
 
-      - name: Create Playwright script
-        run: |
-          mkdir -p scripts
-          cat > scripts/get-bing-cookies.js << 'EOL'
-          const { chromium } = require('playwright');
-          const fs = require('fs');
-
-          async function getBingCookies() {
-            console.log('Launching browser...');
-            const browser = await chromium.launch({
-              headless: true,
-              args: [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage',
-                '--disable-gpu'
-              ]
-            });
-
-            try {
-              const context = await browser.newContext({
-                userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36',
-                viewport: { width: 1280, height: 720 },
-                ignoreHTTPSErrors: true
-              });
-
-              const page = await context.newPage();
-
-              // Set longer timeout
-              page.setDefaultTimeout(60000);
-              page.setDefaultNavigationTimeout(60000);
-
-              console.log('Navigating to Bing...');
-
-              // Try multiple URLs in order of preference
-              const urls = [
-                'https://www.bing.com/',
-                'https://cn.bing.com/',
-                'https://bing.com/'
-              ];
-
-              let success = false;
-              let finalUrl = '';
-
-              for (const url of urls) {
-                try {
-                  console.log(`Trying ${url}...`);
-                  await page.goto(url, {
-                    waitUntil: 'domcontentloaded',
-                    timeout: 30000
-                  });
-
-                  // Wait for page to load
-                  await page.waitForTimeout(3000);
-
-                  // Check if page loaded properly
-                  const title = await page.title();
-                  console.log(`Page title: ${title}`);
-
-                  if (title && title.length > 0) {
-                    success = true;
-                    finalUrl = url;
-                    break;
-                  }
-                } catch (error) {
-                  console.log(`Failed to load ${url}: ${error.message}`);
-                  continue;
-                }
-              }
-
-              if (!success) {
-                throw new Error('Failed to load any Bing URL');
-              }
-
-              console.log(`Successfully loaded: ${finalUrl}`);
-
-              // Wait for initial cookies
-              await page.waitForTimeout(2000);
-              const initialCookies = await context.cookies();
-              console.log(`Initial cookies count: ${initialCookies.length}`);
-
-              // Perform search to get proper cookies
-              console.log('Performing search to trigger proper cookies...');
-
-              try {
-                // Try different search box selectors
-                const searchSelectors = [
-                  'input[name="q"]',
-                  '#sb_form_q',
-                  'input[type="search"]',
-                  '.b_searchbox'
-                ];
-
-                let searchBox = null;
-                for (const selector of searchSelectors) {
-                  try {
-                    searchBox = await page.waitForSelector(selector, { timeout: 5000 });
-                    if (searchBox) {
-                      console.log(`Found search box with selector: ${selector}`);
-                      break;
-                    }
-                  } catch (e) {
-                    console.log(`Search selector ${selector} not found`);
-                    continue;
-                  }
-                }
-
-                if (searchBox) {
-                  // Clear any existing text and enter search query
-                  await searchBox.click();
-                  await page.keyboard.selectAll();
-                  await searchBox.fill('hello world');
-
-                  console.log('Submitting search...');
-
-                  // Try to submit the search
-                  try {
-                    await Promise.race([
-                      searchBox.press('Enter'),
-                      page.click('input[type="submit"], .b_searchboxSubmit, #search_icon')
-                    ]);
-                  } catch (e) {
-                    console.log('Trying alternative search submission...');
-                    await searchBox.press('Enter');
-                  }
-
-                  // Wait for search results page to load
-                  console.log('Waiting for search results...');
-                  try {
-                    await page.waitForSelector('.b_algo, .g, .result', { timeout: 15000 });
-                    console.log('Search results loaded successfully');
-                  } catch (e) {
-                    console.log('Search results selector not found, but continuing...');
-                    // Wait a bit anyway
-                    await page.waitForTimeout(5000);
-                  }
-
-                  // Wait additional time for cookies to be set
-                  await page.waitForTimeout(3000);
-
-                } else {
-                  console.log('Could not find search box, trying direct search URL...');
-
-                  // Fallback: navigate directly to search results
-                  const searchUrl = finalUrl.includes('cn.bing.com') ?
-                    'https://cn.bing.com/search?q=hello+world' :
-                    'https://www.bing.com/search?q=hello+world';
-
-                  await page.goto(searchUrl, {
-                    waitUntil: 'domcontentloaded',
-                    timeout: 30000
-                  });
-
-                  await page.waitForTimeout(5000);
-                  console.log('Navigated to search results directly');
-                }
-
-              } catch (searchError) {
-                console.log(`Search failed: ${searchError.message}`);
-                console.log('Continuing with available cookies...');
-              }
-
-              // Get final cookies after search
-              const finalCookies = await context.cookies();
-              console.log(`Final cookies count: ${finalCookies.length}`);
-
-              // Log cookie names for debugging
-              console.log('Cookie names:', finalCookies.map(c => c.name).join(', '));
-
-              const cookieString = finalCookies
-                .map(cookie => `${cookie.name}=${cookie.value}`)
-                .join('; ');
-
-              console.log(`Successfully retrieved ${finalCookies.length} cookies after search`);
-
-              if (finalCookies.length === 0) {
-                throw new Error('No cookies were retrieved even after search');
-              }
-
-              // Store in JSON format
-              const cookieData = {
-                cookie: cookieString,
-                timestamp: new Date().toISOString(),
-                count: finalCookies.length,
-                source_url: finalUrl,
-                search_performed: true,
-                cookies_detail: finalCookies.map(c => ({
-                  name: c.name,
-                  domain: c.domain,
-                  httpOnly: c.httpOnly,
-                  secure: c.secure
-                }))
-              };
-
-              fs.writeFileSync('bing_cookies.json', JSON.stringify(cookieData, null, 2));
-              console.log('Cookies saved to bing_cookies.json');
-
-              return cookieData;
-            } catch (error) {
-              console.error('Error getting cookies:', error);
-
-              // Create a fallback file with error info
-              const fallbackData = {
-                cookie: '',
-                timestamp: new Date().toISOString(),
-                count: 0,
-                error: error.message,
-                source_url: 'failed',
-                search_performed: false
-              };
-
-              fs.writeFileSync('bing_cookies.json', JSON.stringify(fallbackData, null, 2));
-              throw error;
-            } finally {
-              await browser.close();
-            }
-          }
-
-          getBingCookies()
-            .catch(error => {
-              console.error('Script failed:', error);
-              process.exit(1);
-            });
-          EOL
-
-      - name: Run Playwright script
+      - name: Run Playwright script to fetch cookie
         run: node scripts/get-bing-cookies.js
 
-      - name: Verify cookie file
-        run: |
-          if [ ! -f bing_cookies.json ]; then
-            echo "Error: bing_cookies.json not found"
-            exit 1
-          fi
-          echo "Cookie file contents:"
-          cat bing_cookies.json
-
-      - name: Update GitHub Gist
+      - name: Update GitHub Gist using gh CLI
         env:
+          GIST_PAT: ${{ secrets.GIST_TOKEN }}
           GIST_ID: ${{ secrets.BING_GIST_ID }}
-          GH_TOKEN: ${{ secrets.GIST_TOKEN }}
         run: |
-          if [ -z "$GIST_ID" ] || [ -z "$GH_TOKEN" ]; then
-            echo "Error: BING_GIST_ID or GIST_TOKEN secrets are not set."
-            echo "Please set these secrets in your repository settings."
-            exit 1
-          fi
+          # 使用 gh cli 登录
+          echo "${{ secrets.GIST_TOKEN }}" | gh auth login --with-token
 
-          echo "Updating GitHub Gist..."
+          # 使用 gh cli 更新 Gist，它会自动处理文件内容和格式
+          gh gist edit "${{ secrets.BING_GIST_ID }}" bing_cookies.json
 
-          # Install jq if not available
-          sudo apt-get update
-          sudo apt-get install -y jq
-
-          # Escape the JSON content for API call
-          CONTENT=$(cat bing_cookies.json | jq -Rs .)
-
-          RESPONSE=$(curl -s -X PATCH \
-            -H "Accept: application/vnd.github.v3+json" \
-            -H "Authorization: token $GH_TOKEN" \
-            -d "{\"files\": {\"bing_cookies.json\": {\"content\": $CONTENT}}}" \
-            https://api.github.com/gists/$GIST_ID)
-
-          if [ $? -eq 0 ]; then
-            echo "Gist updated successfully!"
-            echo "Response: $RESPONSE"
-          else
-            echo "Failed to update Gist"
-            echo "Response: $RESPONSE"
-            exit 1
-          fi
+          echo "✅ Gist update complete!"
