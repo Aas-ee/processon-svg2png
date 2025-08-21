@@ -32,10 +32,7 @@ jobs:
           GIST_PAT: ${{ secrets.GIST_TOKEN }}
           GIST_ID: ${{ secrets.BING_GIST_ID }}
         run: |
-          # 使用 gh cli 登录
-          echo "${{ secrets.GIST_TOKEN }}" | gh auth login --with-token
-
-          # 使用 gh cli 更新 Gist，它会自动处理文件内容和格式
+          # 使用 gh cli 更新 Gist
           gh gist edit "${{ secrets.BING_GIST_ID }}" bing_cookies.json
 
           echo "✅ Gist update complete!"
