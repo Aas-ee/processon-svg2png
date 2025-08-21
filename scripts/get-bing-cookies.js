@@ -13,38 +13,25 @@ async function getAndSaveBingCookie() {
     });
     const page = await context.newPage();
     try {
-        // 尝试多个 Bing 域名
-        const bingUrls = [
-            'https://www.bing.com',
-            'https://cn.bing.com',
-            'https://bing.com'
-        ];
+        // 只查询 cn.bing.com
+        const bingUrl = 'https://cn.bing.com';
+        console.log(`正在访问 ${bingUrl}...`);
 
-        let success = false;
-        let currentUrl = '';
+        await page.goto(bingUrl, {
+            waitUntil: 'domcontentloaded',
+            timeout: 30000
+        });
+        await page.waitForTimeout(3000); // 等待页面稳定
 
-        for (const url of bingUrls) {
-            try {
-                console.log(`正在尝试访问 ${url}...`);
-                await page.goto(url, {
-                    waitUntil: 'domcontentloaded',
-                    timeout: 30000
-                });
-                await page.waitForTimeout(3000); // 等待页面稳定
+        const title = await page.title();
+        console.log(`页面标题: ${title}`);
 
-                const title = await page.title();
-                console.log(`页面标题: ${title}`);
-
-                if (title && title.includes('Bing')) {
-                    success = true;
-                    currentUrl = url;
-                    console.log(`✅ 成功访问 ${url}`);
-                    break;
-                }
-            } catch (e) {
-                console.log(`访问 ${url} 失败: ${e.message}`);
-            }
+        if (!title || !title.includes('Bing')) {
+            throw new Error(`无法正确加载 ${bingUrl}，页面标题: ${title}`);
         }
+
+        console.log(`✅ 成功访问 ${bingUrl}`);
+        const currentUrl = bingUrl;
 
         if (!success) {
             throw new Error('无法访问任何 Bing 网址');
@@ -80,15 +67,29 @@ async function getAndSaveBingCookie() {
         let cookies = await context.cookies();
         console.log(`初始获取到 ${cookies.length} 个 cookies`);
 
-        // 尝试通过直接访问搜索URL获取更多 Cookie
+        // 直接访问cn.bing.com的搜索页面获取更多Cookie
         console.log('直接访问搜索页面获取更多 Cookie...');
         const searchTerm = 'hello world';
-        const searchUrl = currentUrl.includes('cn.bing.com') ?
-            `https://cn.bing.com/search?q=${encodeURIComponent(searchTerm)}` :
-            `https://www.bing.com/search?q=${encodeURIComponent(searchTerm)}`;
+        const searchUrl = `https://cn.bing.com/search?q=${encodeURIComponent(searchTerm)}`;
 
         await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
         await page.waitForTimeout(5000); // 给页面足够时间加载
+
+        // 尝试访问一些其他页面以获取更多Cookie
+        const additionalUrls = [
+            'https://cn.bing.com/images',
+            'https://cn.bing.com/maps'
+        ];
+
+        for (const url of additionalUrls) {
+            try {
+                console.log(`访问额外页面: ${url}`);
+                await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 10000 });
+                await page.waitForTimeout(2000);
+            } catch (e) {
+                console.log(`访问 ${url} 失败: ${e.message}`);
+            }
+        }
 
         // 获取最终 Cookie
         cookies = await context.cookies();
